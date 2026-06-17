@@ -135,16 +135,27 @@ fi
 # Claude Code session in a Geminet dir. Runs after Call Recorder so it reuses the name
 # you set there. Opt-out-able; never captures personal or IMOLU/financial content.
 step "cc-logs Stop Hook"
-SETUP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -f "$SETUP_DIR/cc-logs-hook/install-cc-hook.sh" ]]; then
-  if bash "$SETUP_DIR/cc-logs-hook/install-cc-hook.sh"; then
+# Resolve cc-logs-hook/. When run from a local checkout it sits next to this script; when
+# run via `bash <(curl ...)` there is no checkout, so clone the repo (SSH is set up by now,
+# same pattern as Call Recorder above).
+CC_HOOK_DIR=""
+SETUP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd || true)"
+if [[ -n "$SETUP_DIR" && -f "$SETUP_DIR/cc-logs-hook/install-cc-hook.sh" ]]; then
+  CC_HOOK_DIR="$SETUP_DIR/cc-logs-hook"
+else
+  TMP_SETUP=$(mktemp -d)
+  if git clone --depth 1 -q git@github.com:geminet-ai/setup.git "$TMP_SETUP/setup" 2>/dev/null; then
+    CC_HOOK_DIR="$TMP_SETUP/setup/cc-logs-hook"
+  fi
+fi
+if [[ -n "$CC_HOOK_DIR" && -f "$CC_HOOK_DIR/install-cc-hook.sh" ]]; then
+  if bash "$CC_HOOK_DIR/install-cc-hook.sh"; then
     ok "cc-logs Stop Hook installed"
   else
-    warn "cc-logs hook install reported a problem; run it manually later:"
-    warn "  bash $SETUP_DIR/cc-logs-hook/install-cc-hook.sh"
+    warn "cc-logs hook install reported a problem; run it later: bash $CC_HOOK_DIR/install-cc-hook.sh"
   fi
 else
-  warn "cc-logs-hook/install-cc-hook.sh not found next to this script; skipping."
+  warn "Could not obtain cc-logs-hook/ (clone failed?); install it later from geminet-ai/setup."
 fi
 
 # -- 10. Verify geminet-docs builds --
