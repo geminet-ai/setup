@@ -130,7 +130,24 @@ else
   ok "Call Recorder installed"
 fi
 
-# -- 9. Verify geminet-docs builds --
+# -- 9. cc-logs Stop Hook --
+# Auto-commits a session summary to geminet-docs/cc-logs/<you>/ at the end of each
+# Claude Code session in a Geminet dir. Runs after Call Recorder so it reuses the name
+# you set there. Opt-out-able; never captures personal or IMOLU/financial content.
+step "cc-logs Stop Hook"
+SETUP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SETUP_DIR/cc-logs-hook/install-cc-hook.sh" ]]; then
+  if bash "$SETUP_DIR/cc-logs-hook/install-cc-hook.sh"; then
+    ok "cc-logs Stop Hook installed"
+  else
+    warn "cc-logs hook install reported a problem; run it manually later:"
+    warn "  bash $SETUP_DIR/cc-logs-hook/install-cc-hook.sh"
+  fi
+else
+  warn "cc-logs-hook/install-cc-hook.sh not found next to this script; skipping."
+fi
+
+# -- 10. Verify geminet-docs builds --
 step "Verifying geminet-docs build"
 if python3 ~/geminet-docs/docs/_designs/build-docs.py 2>/dev/null; then
   ok "geminet-docs builds cleanly"
@@ -154,4 +171,8 @@ echo "     Joins the Geminet tailnet. Required for Betty access and Call Recorde
 echo "     Run it, then complete sign-in in the browser that opens."
 echo ""
 echo "Then open VoiceInk and confirm it is running (you should see it in the menu bar)."
+echo ""
+echo "${BOLD}cc-logs:${RESET} Claude Code sessions in Geminet dirs auto-log a short summary to"
+echo "geminet-docs. Opt out this shell with 'export CC_LOG_DISABLE=1', or a project with a"
+echo "'CC_LOG: false' line in its CLAUDE.md. Personal and IMOLU/financial content is never captured."
 echo ""
