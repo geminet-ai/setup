@@ -111,13 +111,30 @@ fi
 
 # -- 8. Call Recorder --
 step "Call Recorder"
+# The submit key lets your laptop publish transcripts to Betty. It is NOT required to install
+# or use the recorder: without it, recording and local transcription work and transcripts
+# queue locally until the key is in place. So a missing key warns and continues (never aborts).
 KEY=~/.geminet/call-recorder/id_geminet_recorder
-if [[ ! -f "$KEY" ]]; then
-  fail "Call Recorder SSH key not found at $KEY
-    Get it from 1Password (item: Call Recorder Key), save it to that path, then re-run."
+mkdir -p ~/.geminet/call-recorder
+if [[ -f "$KEY" ]]; then
+  chmod 600 "$KEY"
+  ok "submit key present"
+else
+  warn "Call Recorder submit key not found yet."
+  warn "Open the 1Password link Kim sent ('Call Recorder Key'), copy the key, and save it to:"
+  warn "  $KEY"
+  if [[ -t 0 ]]; then
+    echo "    Paste the key now, then press Ctrl-D (or just press Ctrl-D to skip and add it later):"
+    cat > "$KEY" || true
+    if [[ -s "$KEY" ]]; then
+      chmod 600 "$KEY"; ok "submit key saved"
+    else
+      rm -f "$KEY"; warn "skipped. Recording still works; transcripts queue locally until you add the key."
+    fi
+  else
+    warn "Recording still works; transcripts queue locally until you add the key."
+  fi
 fi
-chmod 600 "$KEY"
-ok "SSH key present and permissions set"
 
 CR_APP=/Applications/CallRecorder.app
 if [[ -d "$CR_APP" ]]; then
