@@ -109,6 +109,22 @@ else
   ok "Installed to ~/.claude/skills/agent-skills"
 fi
 
+# -- 7b. audit skill (Geminet) --
+# The /audit procedure lives in geminet-docs so `git pull` updates it. Symlink rather than copy,
+# so there is exactly one source of truth on disk and it cannot drift.
+step "audit skill"
+if [[ -L ~/.claude/skills/audit ]]; then
+  ok "Already linked"
+elif [[ -e ~/.claude/skills/audit ]]; then
+  warn "~/.claude/skills/audit exists and is not a symlink; leaving it alone"
+elif [[ -d ~/geminet-docs/skills/audit ]]; then
+  mkdir -p ~/.claude/skills
+  ln -s ~/geminet-docs/skills/audit ~/.claude/skills/audit
+  ok "Linked to ~/geminet-docs/skills/audit"
+else
+  warn "~/geminet-docs/skills/audit not found; pull geminet-docs, then re-run this script"
+fi
+
 # -- 8. Call Recorder --
 step "Call Recorder"
 # The submit key lets your laptop publish transcripts to Betty. It is NOT required to install
