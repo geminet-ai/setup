@@ -125,6 +125,33 @@ else
   warn "~/geminet-docs/skills/audit not found; pull geminet-docs, then re-run this script"
 fi
 
+# -- 7c. OpenRouter API key (audit skill's non-Claude engines) --
+# Lets your laptop run audit's full engine set (GLM, Grok, Gemini, Kimi), not just the free
+# Claude auditor. NOT required: without it, audit still runs with the Claude auditor alone and
+# reports the missing engines under Coverage, so a missing key warns and continues, never aborts.
+step "OpenRouter API key"
+ENV_FILE=~/.env
+touch "$ENV_FILE"; chmod 600 "$ENV_FILE"
+if grep -q '^OPENROUTER_API_KEY=' "$ENV_FILE" 2>/dev/null; then
+  ok "already set in ~/.env"
+else
+  warn "OPENROUTER_API_KEY not set yet."
+  warn "If Kim sent you a 1Password link for it, open the link, copy the key, and paste it below."
+  warn "If you don't have one yet, ask Kim -- not everyone needs this on day one."
+  if [[ -t 0 ]]; then
+    read -rsp "    Paste the key now, then press Enter (or press Enter to skip and add it later): " OR_KEY
+    echo ""
+    if [[ -n "$OR_KEY" ]]; then
+      echo "OPENROUTER_API_KEY=$OR_KEY" >> "$ENV_FILE"
+      ok "saved to ~/.env"
+    else
+      warn "skipped. audit still runs (Claude auditor only) until you add the key."
+    fi
+  else
+    warn "audit still runs (Claude auditor only) until you add the key."
+  fi
+fi
+
 # -- 8. Call Recorder --
 step "Call Recorder"
 # The submit key lets your laptop publish transcripts to Betty. It is NOT required to install
